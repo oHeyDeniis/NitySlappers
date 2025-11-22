@@ -1,1 +1,0 @@
-npm run build && cd .. && cd .. && npm run dev
