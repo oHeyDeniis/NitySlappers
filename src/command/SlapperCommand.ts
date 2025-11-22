@@ -1,9 +1,8 @@
-import { Entity, EntityEquipmentTrait, Player, Serenity, StringEnum } from "@serenityjs/core";
-import { on } from "events";
+import { CustomEnum, Entity, Player, Serenity, StringEnum } from "@serenityjs/core";
 import { SlapperRederingTrait } from "../traits/SlapperRederingTrait";
-import { ContainerName, EquipmentSlot, Vector3f } from "@serenityjs/protocol";
-import { CompoundTag, LongTag, StringTag } from "@serenityjs/nbt";
 import { SlapperEntityTrait } from "../traits/SlapperEntityTrait";
+import { StringTag } from "@serenityjs/nbt";
+import { Vector3f } from "@serenityjs/protocol";
 
 export class SlapperCommand {
 
@@ -11,20 +10,21 @@ export class SlapperCommand {
         public serenity: Serenity
     ) {
         serenity.commandPalette.register(
-            "slapperr",
-            "Creates a fake player that slaps entities.",
+            "slapper",
+            "Creates slappers.",
             (registry) => {
                 registry.overload({
-                    name: [StringEnum, true],
+                    action: [SlapperCommandEnum, true],
+                    slapper: [StringEnum, true],
                     args: [StringEnum, true],
-                    args2: [StringEnum, true],
+                    more: [StringEnum, true],
                 }, (command) => {
                     if (command.origin instanceof Player)
-                        this.onExecute(command.origin, [command.name.result, command.args.result, command.args2.result]);
+                        this.onExecute(command.origin, [command.action.result, command.slapper.result, command.args.result, command.more.result]);
                     return { message: undefined };
                 })
             },
-            (who) => { who.origin instanceof Player ? who.origin.sendMessage("Usage: /slapper <name>") : null }
+            (who) => { who.origin instanceof Player ? who.origin.sendMessage("Usage: /slapper help") : null }
         )
     }
     onExecute(player: Player, args: any[]) {
@@ -53,14 +53,13 @@ export class SlapperCommand {
                 player.sendMessage("/slapper tpme [id] - Teleports the slapper with the given id to you.");
                 player.sendMessage("/slapper tp [id] - Teleports you to the slapper with the given id.");
                 player.sendMessage("/slapper setname [id] [new.name] - Sets the name of the slapper with the given id. (use . for spaces)");
+                player.sendMessage("/slapper chunklist - Lists all entities in the current chunk.");
+
                 break;
             case "setname":
             case "sn":
                 const idToSetName = parseInt(args[1] + "s");
-                if (isNaN(idToSetName)) {
-                    player.sendMessage("Invalid slapper ID.");
-                    return;
-                }
+
                 let newName = args[2] || "Slapper.slapper";
                 newName = newName.replace(".", " ");
                 const entityToSetName = Array.from(player.dimension.entities.values()).find(ent => {
@@ -80,10 +79,7 @@ export class SlapperCommand {
                 break;
             case "tpme":
                 const idToTpMe = parseInt(args[1] + "s");
-                if (isNaN(idToTpMe)) {
-                    player.sendMessage("Invalid slapper ID.");
-                    return;
-                }
+
                 const entityToTpMe = Array.from(player.dimension.entities.values()).find(ent => {
                     if (ent.hasTrait(SlapperEntityTrait)) {
                         const sp = ent.getTrait(SlapperEntityTrait)!;
@@ -100,11 +96,7 @@ export class SlapperCommand {
                 }
                 break;
             case "tp":
-                const idToTp = parseInt(args[1]);
-                if (isNaN(idToTp)) {
-                    player.sendMessage("Invalid slapper ID.");
-                    return;
-                }
+                const idToTp = parseInt(args[1] + "s");
                 const entityToTp = Array.from(player.dimension.entities.values()).find(ent => {
                     if (ent.hasTrait(SlapperEntityTrait)) {
                         const sp = ent.getTrait(SlapperEntityTrait)!;
@@ -121,11 +113,8 @@ export class SlapperCommand {
                 break;
             case "removecmd":
             case "rc":
-                const idToRemoveCmd = parseInt(args[1]);
-                if (isNaN(idToRemoveCmd)) {
-                    player.sendMessage("Invalid slapper ID.");
-                    return;
-                }
+                const idToRemoveCmd = parseInt(args[1] + "s");
+
                 let commandToRemove = args[2] ?? "say.hello";
                 commandToRemove = commandToRemove.replace(".", " ");
                 const entityToRemoveCmd = Array.from(player.dimension.entities.values()).find(ent => {
@@ -145,7 +134,7 @@ export class SlapperCommand {
                 break;
             case "addcmd":
             case "ac":
-                const idToAddCmd = parseInt(args[1]);
+                const idToAddCmd = parseInt(args[1] + "s");
                 let commandToAdd = args[2] ?? "say.Hello!";
                 commandToAdd = commandToAdd.replace(".", " ");
                 if (commandToAdd.length === 0) {
@@ -190,11 +179,7 @@ export class SlapperCommand {
                 break;
             case "rm":
             case "remove":
-                const idToRemove = parseInt(args[1]);
-                if (isNaN(idToRemove)) {
-                    player.sendMessage("Invalid slapper ID.");
-                    return;
-                }
+                const idToRemove = parseInt(args[1] + "s");
                 const entityToRemove = Array.from(player.dimension.entities.values()).find(ent => {
                     if (ent.hasTrait(SlapperEntityTrait)) {
                         const sp = ent.getTrait(SlapperEntityTrait)!;
@@ -243,4 +228,27 @@ export class SlapperCommand {
         }
 
     }
+}
+export class SlapperCommandEnum extends CustomEnum {
+    static readonly identifier: string = "slapper_cmd";
+    static readonly options: string[] = [
+        "create",
+        "remove",
+        "list",
+        "addcmd",
+        "removecmd",
+        "tpme",
+        "tp",
+        "setname",
+        "chunklist",
+        "help"
+    ];
+    optional: boolean = true;
+    static readonly strict: boolean = false;
+
+    validate(_error?: boolean): boolean {
+        return true;
+    }
+
+
 }

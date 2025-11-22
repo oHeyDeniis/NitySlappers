@@ -3,26 +3,28 @@ import { SlapperCommand } from "./command/SlapperCommand";
 import { CustomEntityType, WorldEvent } from "@serenityjs/core";
 import { SlapperEntityTrait } from "./traits/SlapperEntityTrait";
 import { SlapperRederingTrait } from "./traits/SlapperRederingTrait";
-import { log } from "console";
-import { StringTag } from "@serenityjs/nbt";
-import { SlapperEntityType } from "./entity/SlapperEntityType";
+import { SlapperEntityTypes } from "./entity/SlapperEntityTypes";
+
 
 class NitySlappers extends Plugin implements PluginEvents {
 
   public constructor() {
-    super("NitySlappers", "1.0.0");
+    super("NitySlappers", "1.1.1");
   }
 
   public onInitialize(): void {
+
     new SlapperCommand(this.serenity);
+
     this.serenity.before(WorldEvent.WorldInitialize, ({ world }) => {
       world.entityPalette.registerTrait(SlapperEntityTrait);
       world.entityPalette.registerTrait(SlapperRederingTrait);
-      world.entityPalette.registerType(new CustomEntityType("slapper_entity_type"));
+      world.entityPalette.registerType(new CustomEntityType(SlapperEntityTypes.SLAPPER_HUMAN_ENTITY_TYPE));
       return true;
     });
-    
-    log("[NitySlappers] Plugin initialized.");
+    this.logger.info("§e[@oHeyDeniis] §6[NitySlappers] §cinitialized.");
+
+
   }
 }
 

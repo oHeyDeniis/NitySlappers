@@ -1,4 +1,4 @@
-import { EntityIdentifier, EntityInteractMethod, EntityTrait, ItemStack, Player } from "@serenityjs/core";
+import { EntityAttributeTrait, EntityEquipmentTrait, EntityIdentifier, EntityInteractMethod, EntityNameableTrait, EntityTrait, ItemStack, Player } from "@serenityjs/core";
 import { SlapperEntity } from "../entity/SlapperEntity";
 import { log } from "console";
 import { ActorDataId, ActorDataType, ActorFlag, DataItem, Rotation, SerializedSkin, SetActorDataPacket, SkinImage, Vector3f } from "@serenityjs/protocol";
@@ -44,7 +44,10 @@ export class SlapperEntityTrait extends EntityTrait {
     }
     setDisplayName(name: string): void {
         this.entity.setStorageEntry("SlapperDisplayName", new StringTag(name, "SlapperDisplayName"));
+        this.entity.setNametagAlwaysVisible(true);
         this.entity.setNametag(name);
+
+
         this.displayName = name;
         this.getRenderingTrait().updateDisplayName();
     }
@@ -66,14 +69,14 @@ export class SlapperEntityTrait extends EntityTrait {
 
         const newCommandTag = new ListTag<StringTag>(commandTags, "SlapperCommandsList");
         this.entity.setStorageEntry("SlapperCommandsList", newCommandTag);
-        
-        
+
+
     }
     getCommands(): string[] {
         const commandTag = this.entity.getStorageEntry<ListTag<StringTag>>("SlapperCommandsList");
         const commands: string[] = [];
         if (commandTag) {
-            for(const cmdTag of commandTag.values()) {
+            for (const cmdTag of commandTag.values()) {
                 commands.push(cmdTag?.valueOf() ?? "");
             }
             return commands;
@@ -254,12 +257,11 @@ export class SlapperEntityTrait extends EntityTrait {
     onAdd(): void {
         if (!(this.entity instanceof SlapperEntity) && !(this.entity.type.identifier === ("slapper_entity_type" as EntityIdentifier))) {
             this.entity.removeTrait(this.identifier);
-            log(`SlapperEntityTrait can only be applied to SlapperEntity. Trait removed from entity ${this.entity.uniqueId}`);
-            log("id: " + this.entity.identifier);
             return;
         }
-        log(`SlapperEntityTrait added to entity ${this.entity.uniqueId}`);
-        log("id: " + this.entity.identifier);
+        for (const trait of [EntityEquipmentTrait, EntityNameableTrait]) {
+            this.entity.addTrait(trait);
+        }
         this.entity.setNametag(this.getDisplayName());
         this.entity.setNametagAlwaysVisible(true);
 

@@ -1,7 +1,8 @@
-import { EntityIdentifier, EntityTrait, ItemStack, Player, PlayerAbilities, PlayerChunkRenderingTrait, TraitOnTickDetails } from "@serenityjs/core";
+import { EntityDespawnOptions, EntityIdentifier, EntityTrait, ItemStack, Player, PlayerAbilities, PlayerChunkRenderingTrait, TraitOnTickDetails } from "@serenityjs/core";
 import { log } from "console";
 import { ActorDataId, ActorDataType, AddPlayerPacket, CommandPermissionLevel, DataItem, DeviceOS, Gamemode, MobArmorEquipmentPacket, MobEquipmentPacket, NetworkItemStackDescriptor, PermissionLevel, PlayerSkinPacket, RemoveEntityPacket, SetActorDataPacket } from "@serenityjs/protocol";
 import { SlapperEntityTrait } from "./SlapperEntityTrait";
+import { SlapperEntityTypes } from "../entity/SlapperEntityTypes";
 
 export class SlapperRederingTrait extends EntityTrait {
 
@@ -9,8 +10,7 @@ export class SlapperRederingTrait extends EntityTrait {
   static identifier: string = "slapper_rendering_trait";
 
   static readonly types: Array<EntityIdentifier> = [
-    EntityIdentifier.Player,
-    "slapper_entity_type" as EntityIdentifier
+    SlapperEntityTypes.SLAPPER_HUMAN_ENTITY_TYPE as EntityIdentifier
   ];
   protected viewers: Map<bigint, Player> = new Map();
 
@@ -33,7 +33,6 @@ export class SlapperRederingTrait extends EntityTrait {
     const entity = this.entity;
     packet.uuid = sp.getUuid();
     packet.username = sp.getDisplayName();
-    log("Spawning slapper with name: " + packet.username + " to viewer " + viewer.username);
     packet.runtimeId = this.entity.runtimeId;
     packet.platformChatId = String();
     packet.position = sp.getSavedPosition() ?? entity.position;
@@ -65,7 +64,6 @@ export class SlapperRederingTrait extends EntityTrait {
 
     viewer.send(packet);
     setTimeout(() => this.updateAllForViewers([viewer]), 200);
-    viewer.sendMessage("Slapper spawned for you!");
   }
   protected despawnFromViewer(viewer: Player): void {
     const entity = this.entity;
@@ -78,6 +76,15 @@ export class SlapperRederingTrait extends EntityTrait {
     this.updateItemInHandForViewers(viewers);
     this.updateArmorForViewers(viewers);
   }
+  onDespawn(details: EntityDespawnOptions): void {
+    this.despawnForAllViewers();
+  }
+  onRemove(): void {
+    this.despawnForAllViewers();
+  }
+  /**
+   * This will be removed in future updates. but now it works as a quick fix for updating display name.
+   */
   public updateDisplayName(): void {
     for (const viewer of this.viewers.values()) {
       this.despawnFromViewer(viewer);
@@ -86,7 +93,7 @@ export class SlapperRederingTrait extends EntityTrait {
       }, 200);
 
     }
-    log("Sent display name update for slapper entity " + this.entity.uniqueId + " to viewers.");
+
   }
   updateSkinForViewers(viewers: Player[]): void {
     const entity = this.entity;
@@ -129,14 +136,10 @@ export class SlapperRederingTrait extends EntityTrait {
     return this.entity.getTrait(SlapperEntityTrait) ?? this.entity.addTrait(SlapperEntityTrait);
   }
   onAdd(): void {
-    if (!(this.entity.type.identifier === ("slapper_entity_type" as EntityIdentifier))) {
+    if (!(this.entity.type.identifier === (SlapperEntityTypes.SLAPPER_HUMAN_ENTITY_TYPE as EntityIdentifier))) {
       this.entity.removeTrait(this.identifier);
-      log(`SlapperRederingTrait can only be applied to SlapperEntity. Trait removed from entity ${this.entity.uniqueId}`);
-      log("identifier: " + this.entity.identifier);
       return;
     }
-    log("identifier: " + this.entity.identifier);
-    log(`SlapperRederingTrait added to entity ${this.entity.uniqueId}`);
     this.dimension.entities.set(this.entity.uniqueId, this.entity);
     this.entity.isAlive = true;
   }
