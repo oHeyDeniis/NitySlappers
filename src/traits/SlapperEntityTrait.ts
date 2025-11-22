@@ -4,6 +4,7 @@ import { log } from "console";
 import { ActorDataId, ActorDataType, ActorFlag, DataItem, Rotation, SerializedSkin, SetActorDataPacket, SkinImage, Vector3f } from "@serenityjs/protocol";
 import { SlapperRederingTrait } from "./SlapperRederingTrait";
 import { CompoundTag, FloatTag, IntTag, ListTag, LongTag, StringTag } from "@serenityjs/nbt";
+import { SlapperEntityTypes } from "../entity/SlapperEntityTypes";
 
 export class SlapperEntityTrait extends EntityTrait {
 
@@ -11,8 +12,8 @@ export class SlapperEntityTrait extends EntityTrait {
     static identifier: string = "slapper_entity_trait";
 
     static readonly types: Array<EntityIdentifier> = [
-        EntityIdentifier.Player,
-        "slapper_entity_type" as EntityIdentifier
+
+        SlapperEntityTypes.SLAPPER_HUMAN_ENTITY_TYPE
     ]
 
     public id: number = -1;
@@ -46,8 +47,6 @@ export class SlapperEntityTrait extends EntityTrait {
         this.entity.setStorageEntry("SlapperDisplayName", new StringTag(name, "SlapperDisplayName"));
         this.entity.setNametagAlwaysVisible(true);
         this.entity.setNametag(name);
-
-
         this.displayName = name;
         this.getRenderingTrait().updateDisplayName();
     }
@@ -216,7 +215,7 @@ export class SlapperEntityTrait extends EntityTrait {
     }
     static createPreStorage(position: Vector3f, skin: SerializedSkin, displayName: string, uuid: string, id: number, commands: string[], rotation: Rotation): CompoundTag {
         const storage = new CompoundTag();
-        storage.set("identifier", new StringTag("slapper_entity_type", "identifier"));
+        storage.set("identifier", new StringTag(SlapperEntityTypes.SLAPPER_HUMAN_ENTITY_TYPE, "identifier"));
         storage.set("UniqueID", new LongTag(BigInt(id), "UniqueID"));
         storage.set("SlapperUUID", new StringTag(uuid, "SlapperUUID"));
         storage.set("SlapperID", new IntTag(id, "SlapperID"));
@@ -255,16 +254,11 @@ export class SlapperEntityTrait extends EntityTrait {
         return storage;
     }
     onAdd(): void {
-        if (!(this.entity instanceof SlapperEntity) && !(this.entity.type.identifier === ("slapper_entity_type" as EntityIdentifier))) {
+        if (this.entity.identifier !== SlapperEntityTypes.SLAPPER_HUMAN_ENTITY_TYPE) {
             this.entity.removeTrait(this.identifier);
             return;
         }
-        for (const trait of [EntityEquipmentTrait, EntityNameableTrait]) {
-            this.entity.addTrait(trait);
-        }
-        this.entity.setNametag(this.getDisplayName());
         this.entity.setNametagAlwaysVisible(true);
-
     }
     public static generateUUID(): string {
         const prefix = 'slapper';

@@ -10,7 +10,7 @@ export class SlapperRederingTrait extends EntityTrait {
   static identifier: string = "slapper_rendering_trait";
 
   static readonly types: Array<EntityIdentifier> = [
-    SlapperEntityTypes.SLAPPER_HUMAN_ENTITY_TYPE as EntityIdentifier
+    SlapperEntityTypes.SLAPPER_HUMAN_ENTITY_TYPE
   ];
   protected viewers: Map<bigint, Player> = new Map();
 

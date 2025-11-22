@@ -1,6 +1,6 @@
 {
   "name": "NitySlappers",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "author": "oHeyDeniis",
   "description": "Create fake players that slap entities in Minecraft using Serenity.",
   "main": "dist/index.js",

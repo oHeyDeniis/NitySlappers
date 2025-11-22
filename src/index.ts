@@ -9,7 +9,7 @@ import { SlapperEntityTypes } from "./entity/SlapperEntityTypes";
 class NitySlappers extends Plugin implements PluginEvents {
 
   public constructor() {
-    super("NitySlappers", "1.1.1");
+    super("NitySlappers", "1.2.0");
   }
 
   public onInitialize(): void {

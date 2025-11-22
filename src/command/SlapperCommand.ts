@@ -3,6 +3,7 @@ import { SlapperRederingTrait } from "../traits/SlapperRederingTrait";
 import { SlapperEntityTrait } from "../traits/SlapperEntityTrait";
 import { StringTag } from "@serenityjs/nbt";
 import { Vector3f } from "@serenityjs/protocol";
+import { SlapperEntityTypes } from "../entity/SlapperEntityTypes";
 
 export class SlapperCommand {
 
@@ -213,13 +214,14 @@ export class SlapperCommand {
                     [],
                     player.rotation
                 );
-                const entity = new Entity(player.dimension, "slapper_entity_type", { storage: storage });
+                const entity = new Entity(player.dimension, SlapperEntityTypes.SLAPPER_HUMAN_ENTITY_TYPE, { storage: storage });
                 const traitSlapper = entity.getTrait(SlapperEntityTrait) ?? entity.addTrait(SlapperEntityTrait);
                 entity.position = player.position;
                 entity.addTrait(SlapperRederingTrait);
                 entity.isAlive = true;
                 player.dimension.entities.set(entity.uniqueId, entity);
-                player.sendMessage(`Custom entity created with ID: ${traitSlapper.getId()} and Name: ${traitSlapper.getDisplayName()}`);
+                entity.getTrait(SlapperEntityTrait)?.setDisplayName(sname);
+                player.sendMessage(`Custom entity created with ID: ${traitSlapper.getId()} | ${entity.uniqueId} and Name: ${traitSlapper.getDisplayName()}`);
                 break;
             default:
                 player.sendMessage("Unknown subcommand. Usage: /slapper <create [name]|remove [id]|list|addcmd [id] [cmd]|removecmd [id] [cmd]>");
