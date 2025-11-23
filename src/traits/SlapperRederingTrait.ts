@@ -20,7 +20,6 @@ export class SlapperRederingTrait extends EntityTrait {
     this.spawnToViewer(viewer);
   }
   public removeViewer(viewer: Player): void {
-    if (!this.hasViewer(viewer)) return;
     this.despawnFromViewer(viewer);
     this.viewers.delete(viewer.uniqueId);
   }
@@ -28,6 +27,7 @@ export class SlapperRederingTrait extends EntityTrait {
     return this.viewers.has(viewer.uniqueId);
   }
   protected spawnToViewer(viewer: Player): void {
+    this.despawnFromViewer(viewer);
     const packet = new AddPlayerPacket();
     const sp = this.getSlapperEntityTrait();
     const entity = this.entity;
@@ -61,15 +61,16 @@ export class SlapperRederingTrait extends EntityTrait {
     };
     packet.deviceId = clientSystemInfo.identifier;
     packet.deviceOS = clientSystemInfo.os;
-
-    viewer.send(packet);
-    setTimeout(() => this.updateAllForViewers([viewer]), 200);
+    setTimeout(() => {
+      viewer.sendImmediate(packet);
+      setTimeout(() => this.updateAllForViewers([viewer]), 200);
+    }, 200);
   }
   protected despawnFromViewer(viewer: Player): void {
     const entity = this.entity;
     const packet = new RemoveEntityPacket();
     packet.uniqueEntityId = entity.uniqueId;
-    viewer.send(packet);
+    viewer.sendImmediate(packet);
   }
   updateAllForViewers(viewers: Player[]): void {
     this.updateSkinForViewers(viewers);
@@ -136,12 +137,20 @@ export class SlapperRederingTrait extends EntityTrait {
     return this.entity.getTrait(SlapperEntityTrait) ?? this.entity.addTrait(SlapperEntityTrait);
   }
   onAdd(): void {
-    if (!(this.entity.type.identifier === (SlapperEntityTypes.SLAPPER_HUMAN_ENTITY_TYPE as EntityIdentifier))) {
+    if (!(this.entity.identifier === SlapperEntityTypes.SLAPPER_HUMAN_ENTITY_TYPE)) {
       this.entity.removeTrait(this.identifier);
       return;
     }
     this.dimension.entities.set(this.entity.uniqueId, this.entity);
     this.entity.isAlive = true;
+  }
+  respawnForAllViewers(): void {
+    for (const viewer of this.viewers.values()) {
+      this.despawnFromViewer(viewer);
+      setTimeout(() => {
+        this.spawnToViewer(viewer);
+      }, 500);
+    }
   }
   despawnForAllViewers(): void {
     for (const viewer of this.viewers.values()) {
@@ -149,29 +158,30 @@ export class SlapperRederingTrait extends EntityTrait {
     }
     this.viewers.clear();
   }
+  defaultViewDistance: number = 35;
+
+  // public verificationInterval: number = 2;
   public onTick(details: TraitOnTickDetails): void {
 
-    if (!this.entity.isAlive) return;
-    if (details.currentTick % 20n !== 0n) return;
+    if (details.currentTick % 20n !== 0n) {
+      return;
+    }
+    //if (this.verificationInterval > 0) {
+    //   this.verificationInterval--;
+    //   return;
+    // }
+    // this.verificationInterval = 2;
 
     for (const player of this.dimension.getPlayers()) {
-      const component = player.getTrait(PlayerChunkRenderingTrait);
-      if (!component) continue;
-      const viewDistance = component.viewDistance << 4;
-      if (this.entity.position.distance(player.position) > viewDistance) continue;
+      if (this.entity.position.distance(player.position) > this.defaultViewDistance) continue;
       this.addViewer(player);
     }
     for (const viewer of this.viewers.values()) {
       if (!viewer.isAlive || !viewer.isTicking || this.dimension.entities.has(this.entity.uniqueId) === false) {
         this.removeViewer(viewer);
       }
-      const component = viewer.getTrait(PlayerChunkRenderingTrait);
-      if (!component) {
-        this.removeViewer(viewer);
-        continue;
-      }
-      const viewDistance = component.viewDistance << 4;
-      if (this.entity.position.distance(viewer.position) > viewDistance) {
+
+      if (this.entity.position.distance(viewer.position) > this.defaultViewDistance) {
         this.removeViewer(viewer);
       }
     }

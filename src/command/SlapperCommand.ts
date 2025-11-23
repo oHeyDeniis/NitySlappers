@@ -7,6 +7,7 @@ import { SlapperEntityTypes } from "../entity/SlapperEntityTypes";
 
 export class SlapperCommand {
 
+
     constructor(
         public serenity: Serenity
     ) {
@@ -34,6 +35,16 @@ export class SlapperCommand {
             return;
         }
         switch (args[0]) {
+            case "respawnall":
+                for (const ent of player.dimension.entities.values()) {
+                    if (ent.hasTrait(SlapperRederingTrait)) {
+                        const renderTrait = ent.getTrait(SlapperRederingTrait)!;
+                        renderTrait.respawnForAllViewers();
+
+                    }
+                }
+                player.sendMessage("All slappers have been respawned for all viewers.");
+                break;
             case "chunklist":
                 const chunk = player.getChunk();
                 for (const [id, data] of chunk.getAllEntityStorages()) {
@@ -59,14 +70,18 @@ export class SlapperCommand {
                 break;
             case "setname":
             case "sn":
-                const idToSetName = parseInt(args[1] + "s");
+                let idToSetName = args[1];
+                if (!(typeof idToSetName === "number")) {
+                    idToSetName = parseInt(idToSetName);
+
+                }
 
                 let newName = args[2] || "Slapper.slapper";
                 newName = newName.replace(".", " ");
                 const entityToSetName = Array.from(player.dimension.entities.values()).find(ent => {
                     if (ent.hasTrait(SlapperEntityTrait)) {
                         const sp = ent.getTrait(SlapperEntityTrait)!;
-                        return sp.getId() === idToSetName;
+                        return sp.getId() === idToSetName || (sp.getId().toString() === idToSetName);
                     }
                     return false;
                 });
@@ -79,12 +94,12 @@ export class SlapperCommand {
                 }
                 break;
             case "tpme":
-                const idToTpMe = parseInt(args[1] + "s");
+                const idToTpMe = args[1]
 
                 const entityToTpMe = Array.from(player.dimension.entities.values()).find(ent => {
                     if (ent.hasTrait(SlapperEntityTrait)) {
                         const sp = ent.getTrait(SlapperEntityTrait)!;
-                        return sp.getId() === idToTpMe;
+                        return sp.getId() === idToTpMe || (sp.getId().toString() === idToTpMe);
                     }
                     return false;
                 }
@@ -97,11 +112,11 @@ export class SlapperCommand {
                 }
                 break;
             case "tp":
-                const idToTp = parseInt(args[1] + "s");
+                const idToTp = args[1];
                 const entityToTp = Array.from(player.dimension.entities.values()).find(ent => {
                     if (ent.hasTrait(SlapperEntityTrait)) {
                         const sp = ent.getTrait(SlapperEntityTrait)!;
-                        return sp.getId() === idToTp;
+                        return sp.getId() === idToTp || (sp.getId().toString() === idToTp);
                     }
                     return false;
                 });
@@ -135,21 +150,18 @@ export class SlapperCommand {
                 break;
             case "addcmd":
             case "ac":
-                const idToAddCmd = parseInt(args[1] + "s");
+                const idToAddCmd = args[1];
                 let commandToAdd = args[2] ?? "say.Hello!";
                 commandToAdd = commandToAdd.replace(".", " ");
                 if (commandToAdd.length === 0) {
                     player.sendMessage("Command cannot be empty.");
                     return;
                 }
-                if (isNaN(idToAddCmd)) {
-                    player.sendMessage("Invalid slapper ID.");
-                    return;
-                }
+
                 const entityToAddCmd = Array.from(player.dimension.entities.values()).find(ent => {
                     if (ent.hasTrait(SlapperEntityTrait)) {
                         const sp = ent.getTrait(SlapperEntityTrait)!;
-                        return sp.getId() === idToAddCmd;
+                        return sp.getId() === idToAddCmd || (sp.getId().toString() === idToAddCmd);
                     }
                     return false;
                 });
@@ -180,11 +192,11 @@ export class SlapperCommand {
                 break;
             case "rm":
             case "remove":
-                const idToRemove = parseInt(args[1] + "s");
+                const idToRemove = args[1];
                 const entityToRemove = Array.from(player.dimension.entities.values()).find(ent => {
                     if (ent.hasTrait(SlapperEntityTrait)) {
                         const sp = ent.getTrait(SlapperEntityTrait)!;
-                        return sp.getId() === idToRemove;
+                        return sp.getId() === idToRemove || (sp.getId().toString() === idToRemove);
                     }
                     return false;
                 });
@@ -204,7 +216,7 @@ export class SlapperCommand {
             case "cc":
                 let sname = args[1] || "Slapper";
                 sname = sname.replace(".", " ");
-                const sentityId = args[2] ? parseInt(args[2] + "s") : Math.floor(Math.random() * 100000);
+                const sentityId = typeof args[2] === "number" ? args[2] : Math.floor(Math.random() * 100000);
                 const storage = SlapperEntityTrait.createPreStorage(
                     player.position,
                     player.skin.getSerialized(),

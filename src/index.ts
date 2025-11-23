@@ -8,8 +8,9 @@ import { SlapperEntityTypes } from "./entity/SlapperEntityTypes";
 
 class NitySlappers extends Plugin implements PluginEvents {
 
+  
   public constructor() {
-    super("NitySlappers", "1.2.0");
+    super("NitySlappers", "1.2.1");
   }
 
   public onInitialize(): void {
